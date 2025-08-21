@@ -1,0 +1,183 @@
+version: 2
+
+models:
+  - name: bronze_region
+    description: Raw region dimension data from Databricks TPC-H dataset
+    columns:
+      - name: r_regionkey
+        description: Primary key for region
+        tests:
+          - unique
+          - not_null
+      - name: r_name
+        description: Region name
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['AFRICA', 'AMERICA', 'ASIA', 'EUROPE', 'MIDDLE EAST']
+
+  - name: bronze_nation
+    description: Raw nation dimension data from Databricks TPC-H dataset
+    columns:
+      - name: n_nationkey
+        description: Primary key for nation
+        tests:
+          - unique
+          - not_null
+      - name: n_regionkey
+        description: Foreign key to region
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_region')
+              field: r_regionkey
+
+  - name: bronze_customer
+    description: Raw customer dimension data from Databricks TPC-H dataset
+    columns:
+      - name: c_custkey
+        description: Primary key for customer
+        tests:
+          - unique
+          - not_null
+      - name: c_acctbal
+        description: Customer account balance
+        tests:
+          - not_null
+      - name: c_nationkey
+        description: Foreign key to nation
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_nation')
+              field: n_nationkey
+
+  - name: bronze_supplier
+    description: Raw supplier dimension data from Databricks TPC-H dataset
+    columns:
+      - name: s_suppkey
+        description: Primary key for supplier
+        tests:
+          - unique
+          - not_null
+      - name: s_nationkey
+        description: Foreign key to nation
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_nation')
+              field: n_nationkey
+
+  - name: bronze_part
+    description: Raw part dimension data from Databricks TPC-H dataset
+    columns:
+      - name: p_partkey
+        description: Primary key for part
+        tests:
+          - unique
+          - not_null
+      - name: p_retailprice
+        description: Retail price of part
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+
+  - name: bronze_orders
+    description: Raw orders fact data from Databricks TPC-H dataset
+    columns:
+      - name: o_orderkey
+        description: Primary key for order
+        tests:
+          - unique
+          - not_null
+      - name: o_custkey
+        description: Foreign key to customer
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_customer')
+              field: c_custkey
+      - name: o_totalprice
+        description: Total price of order
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: o_orderdate
+        description: Date when order was placed
+        tests:
+          - not_null
+
+  - name: bronze_lineitem
+    description: Raw line item fact data from Databricks TPC-H dataset
+    columns:
+      - name: l_orderkey
+        description: Foreign key to order
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_orders')
+              field: o_orderkey
+      - name: l_partkey
+        description: Foreign key to part
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_part')
+              field: p_partkey
+      - name: l_suppkey
+        description: Foreign key to supplier
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_supplier')
+              field: s_suppkey
+      - name: l_quantity
+        description: Quantity of items
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: l_extendedprice
+        description: Extended price of line item
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+
+  - name: bronze_partsupp
+    description: Raw part-supplier relationship data from Databricks TPC-H dataset
+    columns:
+      - name: ps_partkey
+        description: Foreign key to part
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_part')
+              field: p_partkey
+      - name: ps_suppkey
+        description: Foreign key to supplier
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bronze_supplier')
+              field: s_suppkey
+      - name: ps_availqty
+        description: Available quantity
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: ps_supplycost
+        description: Supply cost
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false

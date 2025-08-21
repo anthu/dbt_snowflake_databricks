@@ -1,0 +1,172 @@
+version: 2
+
+sources:
+  - name: tpch
+    description: >
+      TPC-H benchmark data from Snowflake's shared sample database.
+      The scale factor is configurable via the tpch_source_schema variable.
+      
+      Available datasets:
+      - tpch_sf1: Several million rows (good for development)
+      - tpch_sf10: 10x the base size
+      - tpch_sf100: 100x the base size (several hundred million rows)
+      - tpch_sf1000: 1000x the base size (several billion rows)
+      
+      To switch scale factors, update the tpch_source_schema variable in dbt_project.yml
+    database: snowflake_sample_data
+    schema: "{{ var('tpch_source_schema') }}"
+    
+    tables:
+      - name: region
+        description: Geographic regions (5 regions)
+        columns:
+          - name: r_regionkey
+            description: Primary key for region
+          - name: r_name
+            description: Region name
+          - name: r_comment
+            description: Regional comment
+            
+      - name: nation
+        description: Nations within regions (25 nations)
+        columns:
+          - name: n_nationkey
+            description: Primary key for nation
+          - name: n_name
+            description: Nation name
+          - name: n_regionkey
+            description: Foreign key to region
+          - name: n_comment
+            description: National comment
+            
+      - name: customer
+        description: Customer master data with demographics
+        columns:
+          - name: c_custkey
+            description: Primary key for customer
+          - name: c_name
+            description: Customer name
+          - name: c_address
+            description: Customer address
+          - name: c_nationkey
+            description: Foreign key to nation
+          - name: c_phone
+            description: Customer phone number
+          - name: c_acctbal
+            description: Customer account balance
+          - name: c_mktsegment
+            description: Market segment
+          - name: c_comment
+            description: Customer comment
+            
+      - name: supplier
+        description: Supplier master data with geographic information
+        columns:
+          - name: s_suppkey
+            description: Primary key for supplier
+          - name: s_name
+            description: Supplier name
+          - name: s_address
+            description: Supplier address
+          - name: s_nationkey
+            description: Foreign key to nation
+          - name: s_phone
+            description: Supplier phone number
+          - name: s_acctbal
+            description: Supplier account balance
+          - name: s_comment
+            description: Supplier comment
+            
+      - name: part
+        description: Product catalog with specifications
+        columns:
+          - name: p_partkey
+            description: Primary key for part
+          - name: p_name
+            description: Part name
+          - name: p_mfgr
+            description: Manufacturer
+          - name: p_brand
+            description: Brand
+          - name: p_type
+            description: Part type
+          - name: p_size
+            description: Part size
+          - name: p_container
+            description: Container type
+          - name: p_retailprice
+            description: Retail price
+          - name: p_comment
+            description: Part comment
+            
+      - name: partsupp
+        description: Part-supplier relationships with pricing and availability
+        columns:
+          - name: ps_partkey
+            description: Foreign key to part
+          - name: ps_suppkey
+            description: Foreign key to supplier
+          - name: ps_availqty
+            description: Available quantity
+          - name: ps_supplycost
+            description: Supply cost
+          - name: ps_comment
+            description: Part-supplier comment
+            
+      - name: orders
+        description: Order headers with customer information
+        columns:
+          - name: o_orderkey
+            description: Primary key for order
+          - name: o_custkey
+            description: Foreign key to customer
+          - name: o_orderstatus
+            description: Order status
+          - name: o_totalprice
+            description: Total order price
+          - name: o_orderdate
+            description: Order date
+          - name: o_orderpriority
+            description: Order priority
+          - name: o_clerk
+            description: Order clerk
+          - name: o_shippriority
+            description: Ship priority
+          - name: o_comment
+            description: Order comment
+            
+      - name: lineitem
+        description: Order line items (main fact table)
+        columns:
+          - name: l_orderkey
+            description: Foreign key to order
+          - name: l_partkey
+            description: Foreign key to part
+          - name: l_suppkey
+            description: Foreign key to supplier
+          - name: l_linenumber
+            description: Line number within order
+          - name: l_quantity
+            description: Quantity ordered
+          - name: l_extendedprice
+            description: Extended price
+          - name: l_discount
+            description: Discount rate
+          - name: l_tax
+            description: Tax rate
+          - name: l_returnflag
+            description: Return flag
+          - name: l_linestatus
+            description: Line status
+          - name: l_shipdate
+            description: Ship date
+          - name: l_commitdate
+            description: Commit date
+          - name: l_receiptdate
+            description: Receipt date
+          - name: l_shipinstruct
+            description: Ship instructions
+          - name: l_shipmode
+            description: Ship mode
+          - name: l_comment
+            description: Line item comment

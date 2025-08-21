@@ -1,0 +1,229 @@
+version: 2
+
+models:
+  - name: gold_customer_analytics
+    description: Customer-level analytics with comprehensive business metrics for Databricks
+    columns:
+      - name: customer_key
+        description: Primary key for customer
+        tests:
+          - unique
+          - not_null
+      - name: total_orders
+        description: Total number of orders placed by customer
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: total_order_value
+        description: Total value of all orders
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: customer_value_segment
+        description: Customer value segmentation
+        tests:
+          - accepted_values:
+              values: ['VIP', 'PREMIUM', 'STANDARD', 'BASIC']
+      - name: purchase_frequency_segment
+        description: Purchase frequency segmentation
+        tests:
+          - accepted_values:
+              values: ['FREQUENT', 'REGULAR', 'OCCASIONAL', 'ONE_TIME']
+      - name: on_time_delivery_rate
+        description: On-time delivery rate for customer orders
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+
+  - name: gold_sales_analytics
+    description: Sales analytics aggregated by multiple dimensions for Databricks
+    columns:
+      - name: order_date
+        description: Order date
+        tests:
+          - not_null
+      - name: total_line_items
+        description: Total number of line items
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: gross_revenue
+        description: Gross revenue before discounts
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: net_revenue
+        description: Net revenue after discounts
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: on_time_delivery_rate
+        description: On-time delivery rate
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+      - name: return_rate
+        description: Return rate
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+
+  - name: gold_supplier_performance
+    description: Supplier performance metrics and rankings for Databricks
+    columns:
+      - name: supplier_key
+        description: Primary key for supplier
+        tests:
+          - unique
+          - not_null
+      - name: parts_supplied
+        description: Number of different parts supplied
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: total_revenue_generated
+        description: Total revenue generated through this supplier
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: on_time_delivery_rate
+        description: On-time delivery rate for supplier
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+      - name: revenue_performance_tier
+        description: Revenue-based performance tier
+        tests:
+          - accepted_values:
+              values: ['TOP_PERFORMER', 'HIGH_PERFORMER', 'MEDIUM_PERFORMER', 'LOW_PERFORMER']
+      - name: delivery_performance_tier
+        description: Delivery-based performance tier
+        tests:
+          - accepted_values:
+              values: ['EXCELLENT', 'GOOD', 'FAIR', 'POOR']
+      - name: return_rate
+        description: Return rate for supplier products
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+
+  - name: gold_regional_analysis
+    description: Regional trade and performance analysis for Databricks
+    columns:
+      - name: customer_region
+        description: Customer region
+        tests:
+          - not_null
+      - name: supplier_region
+        description: Supplier region
+        tests:
+          - not_null
+      - name: trade_type
+        description: Type of trade (domestic/international)
+        tests:
+          - accepted_values:
+              values: ['DOMESTIC', 'INTERNATIONAL']
+      - name: total_customers
+        description: Total number of customers in region
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: net_revenue
+        description: Net revenue for region
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: domestic_trade_value
+        description: Value of domestic trade
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: international_trade_value
+        description: Value of international trade
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+
+  - name: gold_monthly_kpis
+    description: Monthly Key Performance Indicators for executive dashboards on Databricks
+    columns:
+      - name: report_month
+        description: Report month (first day of month)
+        tests:
+          - unique
+          - not_null
+      - name: net_revenue
+        description: Net revenue for the month
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: total_orders
+        description: Total orders for the month
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: active_customers
+        description: Number of active customers
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: on_time_delivery_rate
+        description: On-time delivery rate for the month
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+      - name: domestic_revenue_pct
+        description: Percentage of revenue from domestic trade
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+      - name: international_revenue_pct
+        description: Percentage of revenue from international trade
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true

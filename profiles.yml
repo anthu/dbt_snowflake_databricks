@@ -1,0 +1,126 @@
+# Multi-Platform dbt Profile Configuration
+# This profiles.yml supports traditional dbt connecting to Snowflake and Databricks
+# Copy this file to ~/.dbt/profiles.yml and configure your credentials
+
+# NOTE: Snowflake also offers "dbt Projects on Snowflake" (preview feature) which runs
+# dbt natively within Snowflake workspaces. For that approach, see:
+# https://docs.snowflake.com/en/user-guide/tutorials/dbt-projects-on-snowflake-getting-started-tutorial
+# 
+# This configuration is for traditional dbt usage (external dbt → platforms)
+
+tpch_medallion_multiplatform:
+  target: snowflake_dev  # Default target - change to your preferred platform
+  
+  outputs:
+    # ===========================================
+    # SNOWFLAKE CONFIGURATIONS
+    # ===========================================
+    
+    snowflake_dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'your_account.region') }}"  # e.g., abc12345.us-east-1
+      user: "{{ env_var('SNOWFLAKE_USER', 'your_username') }}"
+      
+      # Authentication Options (choose one):
+      # Option 1: Password Authentication
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', 'your_password') }}"
+      
+      # Option 2: Key-pair Authentication (more secure)
+      # private_key_path: ~/.ssh/snowflake_rsa_key.p8
+      # private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
+      
+      # Option 3: SSO/OAuth (for enterprise)
+      # authenticator: externalbrowser
+      
+      # Connection Configuration (following Snowflake dbt tutorial patterns)
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'ACCOUNTADMIN') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'TPCH_MEDALLION_DB') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'TPCH_MEDALLION_WH') }}"
+      schema: dev  # Following Snowflake tutorial naming convention
+      
+      # Performance and Connection Settings
+      threads: 4
+      keepalives_idle: 240
+      connect_retries: 3
+      connect_timeout: 10
+      retry_on_database_errors: true
+      
+      # Query Configuration
+      query_tag: dbt_tpch_medallion_dev
+      client_session_keep_alive: false
+      
+    snowflake_prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'your_account.region') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'your_username') }}"
+      
+      # Production should use key-pair authentication for security
+      # password: "{{ env_var('SNOWFLAKE_PASSWORD', 'your_password') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH', '~/.ssh/snowflake_rsa_key.p8') }}"
+      private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
+      
+      # Production Configuration
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'ACCOUNTADMIN') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'TPCH_MEDALLION_DB') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'TPCH_MEDALLION_WH') }}"
+      schema: prod  # Following Snowflake tutorial naming convention
+      
+      # Production Performance Settings
+      threads: 8
+      keepalives_idle: 240
+      connect_retries: 5
+      connect_timeout: 10
+      retry_on_database_errors: true
+      
+      # Query Configuration
+      query_tag: dbt_tpch_medallion_prod
+      client_session_keep_alive: false
+      
+    # ===========================================
+    # DATABRICKS CONFIGURATIONS  
+    # ===========================================
+    
+    databricks_dev:
+      type: databricks
+      catalog: "{{ env_var('DATABRICKS_CATALOG', 'dev') }}"
+      schema: tpch_medallion
+      
+      # Connection Options (choose one):
+      # Option 1: Personal Access Token (recommended for development)
+      host: "{{ env_var('DATABRICKS_HOST', 'your_workspace.cloud.databricks.com') }}"
+      token: "{{ env_var('DATABRICKS_TOKEN', 'your_personal_access_token') }}"
+      
+      # Option 2: OAuth (for interactive development)
+      # host: "{{ env_var('DATABRICKS_HOST') }}"
+      # auth_type: oauth
+      
+      # Option 3: Service Principal (for production)
+      # host: "{{ env_var('DATABRICKS_HOST') }}"
+      # client_id: "{{ env_var('DATABRICKS_CLIENT_ID') }}"
+      # client_secret: "{{ env_var('DATABRICKS_CLIENT_SECRET') }}"
+      
+      # Compute Configuration
+      http_path: "{{ env_var('DATABRICKS_HTTP_PATH', '/sql/1.0/warehouses/your_warehouse_id') }}"
+      # Alternative: Use cluster instead of SQL warehouse
+      # http_path: "{{ env_var('DATABRICKS_HTTP_PATH', '/sql/protocolv1/o/123456789/your_cluster_id') }}"
+      
+      threads: 4
+      connect_retries: 3
+      connect_timeout: 60
+      retry_all: true
+      
+    databricks_prod:
+      type: databricks
+      catalog: "{{ env_var('DATABRICKS_CATALOG', 'prod') }}"
+      schema: tpch_medallion
+      host: "{{ env_var('DATABRICKS_HOST', 'your_workspace.cloud.databricks.com') }}"
+      
+      # Production should use Service Principal authentication
+      client_id: "{{ env_var('DATABRICKS_CLIENT_ID', 'your_service_principal_id') }}"
+      client_secret: "{{ env_var('DATABRICKS_CLIENT_SECRET', 'your_service_principal_secret') }}"
+      
+      http_path: "{{ env_var('DATABRICKS_HTTP_PATH_PROD', '/sql/1.0/warehouses/your_prod_warehouse_id') }}"
+      threads: 8
+      connect_retries: 5
+      connect_timeout: 120
+      retry_all: true

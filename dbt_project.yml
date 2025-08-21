@@ -1,0 +1,80 @@
+name: 'tpch_medallion_multiplatform'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'tpch_medallion_multiplatform'
+
+# These configurations specify where dbt should look for different types of files.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"  # directory which will store compiled SQL files
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_packages"
+
+# Configuring models
+models:
+  tpch_medallion_multiplatform:
+    # Global defaults for all models
+    +materialized: table
+    
+    # Snowflake-specific models
+    snowflake:
+      bronze:
+        +materialized: table
+        +schema: bronze
+        +tags: ["bronze", "raw", "snowflake"]
+        
+      silver:
+        +materialized: table  
+        +schema: silver
+        +tags: ["silver", "cleaned", "snowflake"]
+        
+      gold:
+        +materialized: table
+        +schema: gold
+        +tags: ["gold", "business", "snowflake"]
+    
+    # Databricks-specific models  
+    databricks:
+      bronze:
+        +materialized: table
+        +file_format: delta
+        +schema: bronze
+        +tags: ["bronze", "raw", "databricks"]
+        
+      silver:
+        +materialized: table
+        +file_format: delta
+        +schema: silver
+        +tags: ["silver", "cleaned", "databricks"]
+        
+      gold:
+        +materialized: table
+        +file_format: delta
+        +schema: gold
+        +tags: ["gold", "business", "databricks"]
+
+vars:
+  # Snowflake TPC-H configuration
+  # Available options: tpch_sf1, tpch_sf10, tpch_sf100, tpch_sf1000
+  # tpch_sf1: Several million rows (good for development)
+  # tpch_sf10: 10x base size
+  # tpch_sf100: 100x base size (several hundred million rows)  
+  # tpch_sf1000: 1000x base size (several billion rows)
+  tpch_source_schema: tpch_sf1
+  
+  # Databricks TPC-H configuration
+  # Configure Unity Catalog location for TPC-H data
+  databricks_tpch_catalog: samples
+  databricks_tpch_schema: tpch
+  
+  # TPC-H date range (fixed for benchmark consistency)
+  start_date: '1992-01-01'
+  end_date: '1998-12-31'

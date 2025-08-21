@@ -1,0 +1,136 @@
+# Multi-Platform dbt Profile Template
+# Copy this file to ~/.dbt/profiles.yml and configure for your environment
+# Use environment variables for sensitive information (recommended)
+
+# NOTE: This configuration is for traditional dbt usage (external dbt → platforms)
+# For Snowflake's native "dbt Projects on Snowflake" feature, see:
+# https://docs.snowflake.com/en/user-guide/tutorials/dbt-projects-on-snowflake-getting-started-tutorial
+
+tpch_medallion_multiplatform:
+  target: snowflake_dev  # Change to: snowflake_dev, snowflake_prod, databricks_dev, or databricks_prod
+  
+  outputs:
+    # ===========================================
+    # SNOWFLAKE ENVIRONMENTS
+    # ===========================================
+    
+    snowflake_dev:
+      type: snowflake
+      
+      # Basic Connection (replace with your values)
+      account: your_account.region.snowflakecomputing.com  # e.g., abc12345.us-east-1.snowflakecomputing.com
+      user: your_username
+      password: your_password  # Use env_var for security: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      
+      # Database Configuration (following Snowflake dbt tutorial patterns)
+      role: ACCOUNTADMIN
+      database: TPCH_MEDALLION_DB
+      warehouse: TPCH_MEDALLION_WH
+      schema: dev
+      
+      # Performance Settings
+      threads: 4
+      keepalives_idle: 240
+      query_tag: dbt_tpch_dev
+      
+    snowflake_prod:
+      type: snowflake
+      account: your_account.region.snowflakecomputing.com
+      user: your_username
+      password: your_password
+      role: ACCOUNTADMIN
+      database: TPCH_MEDALLION_DB
+      warehouse: TPCH_MEDALLION_WH
+      schema: prod
+      threads: 8
+      keepalives_idle: 240
+      query_tag: dbt_tpch_prod
+      
+    # ===========================================
+    # DATABRICKS ENVIRONMENTS
+    # ===========================================
+    
+    databricks_dev:
+      type: databricks
+      
+      # Unity Catalog Configuration
+      catalog: dev  # or main, samples, etc.
+      schema: tpch_medallion
+      
+      # Connection Settings (replace with your values)
+      host: your_workspace.cloud.databricks.com  # e.g., adb-1234567890123456.7.azuredatabricks.net
+      token: your_personal_access_token  # Use env_var for security: "{{ env_var('DATABRICKS_TOKEN') }}"
+      
+      # Compute Configuration
+      http_path: /sql/1.0/warehouses/your_warehouse_id  # SQL Warehouse recommended
+      # Alternative cluster path: /sql/protocolv1/o/123456789/your_cluster_id
+      
+      # Performance Settings
+      threads: 4
+      connect_retries: 3
+      connect_timeout: 60
+      
+    databricks_prod:
+      type: databricks
+      catalog: prod
+      schema: tpch_medallion
+      host: your_workspace.cloud.databricks.com
+      
+      # Production Authentication (Service Principal recommended)
+      client_id: your_service_principal_id
+      client_secret: your_service_principal_secret
+      
+      http_path: /sql/1.0/warehouses/your_prod_warehouse_id
+      threads: 8
+      connect_retries: 5
+      connect_timeout: 120
+
+# ===========================================
+# CONFIGURATION EXAMPLES
+# ===========================================
+
+# Example 1: Environment Variables (Recommended)
+# Replace hardcoded values with: "{{ env_var('VARIABLE_NAME', 'default_value') }}"
+#
+# Snowflake:
+#   account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+#   user: "{{ env_var('SNOWFLAKE_USER') }}"
+#   password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+#
+# Databricks:
+#   host: "{{ env_var('DATABRICKS_HOST') }}"
+#   token: "{{ env_var('DATABRICKS_TOKEN') }}"
+
+# Example 2: Advanced Snowflake Authentication
+# Key-pair authentication (more secure):
+#   private_key_path: ~/.ssh/snowflake_rsa_key.p8
+#   private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
+#
+# SSO/OAuth:
+#   authenticator: externalbrowser
+
+# Example 3: Advanced Databricks Authentication
+# OAuth (interactive):
+#   auth_type: oauth
+#
+# Azure AD (Enterprise):
+#   auth_type: azure-cli
+#
+# AWS IAM (Cross-account):
+#   auth_type: aws-iam
+
+# ===========================================
+# QUICK START COMMANDS
+# ===========================================
+
+# Test connection:
+#   dbt debug --target snowflake_dev
+#   dbt debug --target databricks_dev
+
+# Run specific platform:
+#   dbt run --target snowflake_dev --select tag:snowflake
+#   dbt run --target databricks_dev --select tag:databricks
+
+# Generate docs:
+#   dbt docs generate --target snowflake_dev
+#   dbt docs serve

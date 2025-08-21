@@ -1,0 +1,252 @@
+version: 2
+
+models:
+  - name: silver_region
+    description: Cleaned and standardized region dimension for Databricks
+    columns:
+      - name: region_key
+        description: Primary key for region
+        tests:
+          - unique
+          - not_null
+      - name: region_name
+        description: Standardized region name (uppercase)
+        tests:
+          - not_null
+      - name: is_missing_key
+        description: Data quality flag for missing keys
+        tests:
+          - accepted_values:
+              values: [true, false]
+
+  - name: silver_nation
+    description: Cleaned and enriched nation dimension with region information for Databricks
+    columns:
+      - name: nation_key
+        description: Primary key for nation
+        tests:
+          - unique
+          - not_null
+      - name: nation_name
+        description: Standardized nation name (uppercase)
+        tests:
+          - not_null
+      - name: region_key
+        description: Foreign key to region
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_region')
+              field: region_key
+
+  - name: silver_customer
+    description: Cleaned customer dimension with derived business attributes for Databricks
+    columns:
+      - name: customer_key
+        description: Primary key for customer
+        tests:
+          - unique
+          - not_null
+      - name: customer_name
+        description: Customer name
+        tests:
+          - not_null
+      - name: account_balance
+        description: Customer account balance
+        tests:
+          - not_null
+      - name: customer_tier
+        description: Customer tier based on account balance
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['HIGH_VALUE', 'MEDIUM_VALUE', 'LOW_VALUE', 'DEFICIT']
+      - name: balance_category
+        description: Account balance category
+        tests:
+          - accepted_values:
+              values: ['POSITIVE', 'ZERO', 'NEGATIVE']
+
+  - name: silver_supplier
+    description: Cleaned supplier dimension with derived business attributes for Databricks
+    columns:
+      - name: supplier_key
+        description: Primary key for supplier
+        tests:
+          - unique
+          - not_null
+      - name: supplier_name
+        description: Supplier name
+        tests:
+          - not_null
+      - name: supplier_tier
+        description: Supplier tier based on account balance
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['HIGH_VALUE', 'MEDIUM_VALUE', 'LOW_VALUE', 'DEFICIT']
+
+  - name: silver_part
+    description: Cleaned part dimension with categorization for Databricks
+    columns:
+      - name: part_key
+        description: Primary key for part
+        tests:
+          - unique
+          - not_null
+      - name: part_name
+        description: Part name
+        tests:
+          - not_null
+      - name: retail_price
+        description: Retail price
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: price_category
+        description: Price category
+        tests:
+          - accepted_values:
+              values: ['PREMIUM', 'STANDARD', 'ECONOMY']
+      - name: size_category
+        description: Size category
+        tests:
+          - accepted_values:
+              values: ['LARGE', 'MEDIUM', 'SMALL']
+
+  - name: silver_orders
+    description: Cleaned orders fact with customer enrichment and derived fields for Databricks
+    columns:
+      - name: order_key
+        description: Primary key for order
+        tests:
+          - unique
+          - not_null
+      - name: customer_key
+        description: Foreign key to customer
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_customer')
+              field: customer_key
+      - name: total_price
+        description: Total order price
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: order_date
+        description: Order date
+        tests:
+          - not_null
+      - name: order_size_category
+        description: Order size categorization
+        tests:
+          - accepted_values:
+              values: ['LARGE', 'MEDIUM', 'SMALL', 'MICRO']
+      - name: priority_group
+        description: Priority grouping
+        tests:
+          - accepted_values:
+              values: ['HIGH', 'MEDIUM', 'LOW']
+
+  - name: silver_lineitem
+    description: Cleaned line item fact with comprehensive enrichment and calculations for Databricks
+    columns:
+      - name: order_key
+        description: Foreign key to order
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_orders')
+              field: order_key
+      - name: part_key
+        description: Foreign key to part
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_part')
+              field: part_key
+      - name: supplier_key
+        description: Foreign key to supplier
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_supplier')
+              field: supplier_key
+      - name: quantity
+        description: Quantity ordered
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: extended_price
+        description: Extended price
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: final_price
+        description: Final price after discount and tax
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: delivery_performance
+        description: Delivery performance indicator
+        tests:
+          - accepted_values:
+              values: ['ON_TIME', 'LATE']
+      - name: trade_type
+        description: Domestic vs international trade
+        tests:
+          - accepted_values:
+              values: ['DOMESTIC', 'INTERNATIONAL']
+
+  - name: silver_partsupp
+    description: Cleaned part-supplier relationship with profitability analysis for Databricks
+    columns:
+      - name: part_key
+        description: Foreign key to part
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_part')
+              field: part_key
+      - name: supplier_key
+        description: Foreign key to supplier
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_supplier')
+              field: supplier_key
+      - name: available_quantity
+        description: Available quantity
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: supply_cost
+        description: Supply cost
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: stock_level_category
+        description: Stock level categorization
+        tests:
+          - accepted_values:
+              values: ['HIGH_STOCK', 'MEDIUM_STOCK', 'LOW_STOCK', 'CRITICAL_STOCK']
+      - name: margin_category
+        description: Profit margin category
+        tests:
+          - accepted_values:
+              values: ['HIGH_MARGIN', 'MEDIUM_MARGIN', 'LOW_MARGIN']
